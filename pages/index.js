@@ -100,7 +100,7 @@ export default function Home() {
   }, [isRecording]);
 
   return (
-    <div className="container">
+    <div>
       <Button
         variant='outlined'
         color='primary'
