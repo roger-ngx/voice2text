@@ -57,7 +57,7 @@ export default function Home() {
         let blob = recordAudio.getBlob();
         console.log(blob);
       }
-    }else if(isRecording === true){
+    }else if(process.browser && isRecording === true){
       try{
         setConversationContent('');
 
@@ -75,7 +75,7 @@ export default function Home() {
           desiredSampRate: 16000,
 
           recorderType: RecordRTC.StereoAudioRecorder,
-          numberOfAudioChannels: 1,
+          numberOfAudioChannels: 2,
 
           //1)
           // get intervals based blobs
