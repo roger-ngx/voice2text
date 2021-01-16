@@ -1,7 +1,7 @@
 import React from 'react';
+if (typeof document === 'undefined') { global.document = { querySelector: function () {}, }; }
 
 function App({ Component, pageProps }) {
-    if (typeof document === 'undefined') { global.document = { querySelector: function () {}, }; }
     return <Component {...pageProps} />
 }
 
