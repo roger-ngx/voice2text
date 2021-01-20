@@ -81,7 +81,7 @@ export default function Home() {
           // get intervals based blobs
           // value in milliseconds
           // as you might not want to make detect calls every seconds
-          timeSlice: 5000,
+          timeSlice: 20000,
 
           //2)
           // as soon as the stream is available
