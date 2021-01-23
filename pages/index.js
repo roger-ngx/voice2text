@@ -14,7 +14,7 @@ import socket from '../lib/ws';
 
 let recordAudio;
 
-const SERVER_URL = 'http://183.96.253.147:8051';
+const SERVER_URL = 'https://183.96.253.147:8051';
 // const SERVER_URL = 'http://localhost:8051';
 
 export default function Home() {
