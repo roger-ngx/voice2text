@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 
-import { map, forEach } from 'lodash';
+import { map, size } from 'lodash';
 
 import Button from '@material-ui/core/Button';
 import KeyboardVoiceIcon from '@material-ui/icons/KeyboardVoice';
@@ -8,7 +8,6 @@ import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
 
 import ss from 'socket.io-stream';
 import RecordRTC from 'recordrtc';
-import Ciseaux from 'ciseaux/browser';
 
 import socket from '../lib/ws';
 
@@ -18,22 +17,45 @@ const SERVER_URL = 'https://183.96.253.147:8051';
 // const SERVER_URL = 'http://localhost:8051';
 
 export default function Home() {
+
+  const [connectingServer, setConnectingServer] = useState();
   const [isRecording, setRecording] = useState();
   let conversationName = '';
   const [conversationContent, setConversationContent ] = useState([]);
 
-  useEffect(() =>{
-    console.log(global.socket_uuid);
-    socket.on(`transcription_${global.socket_uuid}`, data => {
-      //https://overreacted.io/making-setinterval-declarative-with-react-hooks/
-      // setConversationContent(conversationContent => [...conversationContent, ...data.transcription]);
-    });
+  // useEffect(() =>{
+  //   console.log(global.socket_uuid);
+  //   socket.on(`transcription_${global.socket_uuid}`, data => {
+  //     //https://overreacted.io/making-setinterval-declarative-with-react-hooks/
+  //     // setConversationContent(conversationContent => [...conversationContent, ...data.transcription]);
+  //   });
 
-    return () => socket.off(`transcription_${global.socket_uuid}`);
-  }, []);
+  //   return () => socket.off(`transcription_${global.socket_uuid}`);
+  // }, []);
 
   const onRecord = () => {
     setRecording(!isRecording);
+  };
+
+  const requestServerForText = file => {
+    setConnectingServer(true);
+
+    conversationName = new Date().getTime();
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('name', conversationName);
+
+    fetch(SERVER_URL + '/upload/file', {
+      method: 'POST',
+      mode: 'cors',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      setConnectingServer(false);
+      setConversationContent(data.transcription);
+    });
   };
 
   const processAvailableData = blob => {
@@ -65,18 +87,8 @@ export default function Home() {
 
         recordAudio.stopRecording(() => {
           let blob = recordAudio.getBlob();
-          // console.log('blob', blob);
-          conversationName = new Date().getTime();
 
-          const formData = new FormData();
-          formData.append('file', blob);
-          formData.append('name', conversationName);
-
-          fetch(SERVER_URL + '/upload/file', {
-            method: 'POST',
-            mode: 'cors',
-            body: formData
-          }).then(res => res.json()).then(data => setConversationContent(data.transcription));
+          requestServerForText(blob);
         });
       }
     }else if(process.browser && isRecording === true){
@@ -124,26 +136,9 @@ export default function Home() {
   const onProcessFile = async (e) => {
     const files = Array.from(e.target.files);
 
-    console.log(files[0]);
-    conversationName = new Date().getTime();
-
-    const formData = new FormData();
-    formData.append('file', files[0]);
-    formData.append('name', conversationName);
-
-    fetch(SERVER_URL + '/upload/file', {
-      method: 'POST',
-      mode: 'cors',
-      body: formData
-    })
-    .then(res => res.json())
-    .then(
-      data => {
-        console.log(data);
-        setConversationContent(data.transcription)
-      }
-    );
-
+    if(size(files) > 0){
+      requestServerForText(files[0]);
+    }
   };
 
   return (
@@ -156,7 +151,7 @@ export default function Home() {
         >
           <KeyboardVoiceIcon style={{marginRight: 4}}/>
           {
-            isRecording ? 'Stop' : 'Record'
+            isRecording ? 'Get text' : 'record'
           }
         </Button>
 
@@ -192,7 +187,10 @@ export default function Home() {
         }}
       >
         {
-          map(conversationContent, content => (<p key={content}>{content}</p>))
+          connectingServer ?
+          'Getting texts from server. Please wait.'
+          :
+          map(conversationContent, content => (<p key={content} style={{marginVertical: 0}}>{content}</p>))
         }
       </div>
     </div>
